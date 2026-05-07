@@ -33,7 +33,7 @@
   const nextBtn = document.getElementById('carousel-next');
   if (prevBtn) prevBtn.addEventListener('click', () => showSlide(current - 1));
   if (nextBtn) nextBtn.addEventListener('click', () => showSlide(current + 1));
-  if (slides.length) setInterval(() => showSlide(current + 1), 5000);
+  if (slides.length) setInterval(() => showSlide(current + 1), 7000);
 
   // ========== NAVBAR STICKY SHADOW ==========
   const navbar = document.getElementById('navbar');
