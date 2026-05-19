@@ -282,13 +282,76 @@
     });
   }, 100);
 
-  // ========== BANNIÈRE COOKIE RGPD ==========
-  function initCookieBanner() {
-    // Vérifier si le consentement a déjà été donné
-    const cookieConsent = localStorage.getItem('cookieConsent');
-    if (cookieConsent === 'accepted' || cookieConsent === 'refused') return;
+  // ========== BANNIÈRE COOKIE RGPD (VERSION CORRIGÉE) ==========
+  
+  // Fonction pour charger les scripts tiers (UNIQUEMENT si accepté)
+  function loadThirdPartyScripts() {
+    // Exemple d'ajout de Google Analytics (remplacez UA-XXXXX-X par votre ID)
+    // Décommentez le bloc ci-dessous quand vous aurez votre ID Google Analytics
+    /*
+    if (!document.querySelector('script[src*="googletagmanager"]')) {
+      const gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=UA-XXXXX-X';
+      document.head.appendChild(gaScript);
+      
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-XXXXX-X');
+    }
+    */
 
-    // Créer la bannière
+    // Exemple d'ajout de pixel Meta/Facebook
+    /*
+    if (!document.querySelector('script[src*="facebook.net"]')) {
+      const fbScript = document.createElement('script');
+      fbScript.src = 'https://connect.facebook.net/fr_FR/fbevents.js';
+      document.head.appendChild(fbScript);
+    }
+    */
+
+    console.log('Cookies acceptés - scripts tiers chargés (si configurés)');
+  }
+
+  // Fonction pour bloquer/supprimer les scripts tiers (en cas de refus)
+  function blockThirdPartyScripts() {
+    // Supprime les scripts Google Analytics déjà présents
+    const gaScripts = document.querySelectorAll('script[src*="googletagmanager"], script[src*="google-analytics"]');
+    gaScripts.forEach(script => script.remove());
+    
+    // Supprime les scripts Meta/Facebook
+    const fbScripts = document.querySelectorAll('script[src*="facebook.net"], script[src*="fbevents"]');
+    fbScripts.forEach(script => script.remove());
+    
+    // Supprime d'autres scripts tiers (Hotjar, etc.)
+    const otherScripts = document.querySelectorAll('script[src*="hotjar"], script[src*="clarity"]');
+    otherScripts.forEach(script => script.remove());
+    
+    // Neutralise les objets globaux si nécessaire
+    if (window.gtag) window.gtag = function(){};
+    if (window.fbq) window.fbq = function(){};
+    
+    console.log('Cookies refusés - scripts tiers bloqués');
+  }
+
+  // Fonction principale d'initialisation de la bannière cookie
+  function initCookieBanner() {
+    const consent = localStorage.getItem('cookieConsent');
+
+    // Si déjà refusé, on bloque tout et on ne montre pas la bannière
+    if (consent === 'refused') {
+      blockThirdPartyScripts();
+      return;
+    }
+
+    // Si déjà accepté, on charge les scripts
+    if (consent === 'accepted') {
+      loadThirdPartyScripts();
+      return;
+    }
+
+    // Sinon (pas de choix encore), on affiche la bannière
     const banner = document.createElement('div');
     banner.className = 'cookie-banner';
     banner.innerHTML = `
@@ -299,27 +362,36 @@
       </div>
     `;
     document.body.appendChild(banner);
-
-    // Afficher la bannière avec animation
+    
+    // Animation d'apparition
     setTimeout(() => banner.classList.add('show'), 100);
 
-    // Gestion des boutons
-    document.getElementById('cookie-accept').addEventListener('click', () => {
-      localStorage.setItem('cookieConsent', 'accepted');
-      banner.classList.remove('show');
-      setTimeout(() => banner.remove(), 500);
-      // Activer les cookies analytiques ici si besoin (Google Analytics, etc.)
-      console.log('Cookies acceptés');
-    });
+    // Gestion du bouton "Accepter"
+    const acceptBtn = document.getElementById('cookie-accept');
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', () => {
+        localStorage.setItem('cookieConsent', 'accepted');
+        banner.classList.remove('show');
+        setTimeout(() => banner.remove(), 500);
+        loadThirdPartyScripts();
+        console.log('Cookies acceptés par l\'utilisateur');
+      });
+    }
 
-    document.getElementById('cookie-refuse').addEventListener('click', () => {
-      localStorage.setItem('cookieConsent', 'refused');
-      banner.classList.remove('show');
-      setTimeout(() => banner.remove(), 500);
-      console.log('Cookies refusés');
-    });
+    // Gestion du bouton "Refuser"
+    const refuseBtn = document.getElementById('cookie-refuse');
+    if (refuseBtn) {
+      refuseBtn.addEventListener('click', () => {
+        localStorage.setItem('cookieConsent', 'refused');
+        banner.classList.remove('show');
+        setTimeout(() => banner.remove(), 500);
+        blockThirdPartyScripts();
+        console.log('Cookies refusés par l\'utilisateur');
+      });
+    }
   }
 
+  // Lancer l'initialisation de la bannière cookie
   initCookieBanner();
 
 })();
